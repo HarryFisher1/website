@@ -12,7 +12,7 @@ tags:
   - Python
   - R
 subtitle: ''
-summary: ''
+summary: 'Exploring machine learning techinques in different languages :robot:'
 authors: []
 lastmod: '2019-08-16T18:34:59+01:00'
 featured: no
@@ -23,9 +23,9 @@ image:
 projects: []
 ---
 
-I often see posts about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don't see any harm in exploring python a little more. 
+I often see things about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don't see any harm in exploring python a little more... "Be like water!" a wise man once said...
 
-I thought it would be intersting to compare R and python in a couple of coomon machine learning techniques. Given my slight R bias, I am going to be using the recticulate package to run python code within R 
+I thought it would be intersting to compare R and python in a couple of common machine learning techniques. Given my slight R bias, I am going to be using the `recticulate` package to run python scripts within R. 
 
 
 

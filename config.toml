@@ -16,7 +16,7 @@ baseurl = "https://harryfish.netlify.com/"
 copyright = "&copy; Harry Fisher {year}"
 
 # Enable analytics by entering your Google Analytics tracking ID
-googleAnalytics = ""
+googleAnalytics = "UA-145834792-1"
 
 ############################
 ## Advanced options below ##
