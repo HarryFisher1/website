@@ -1,36 +1,38 @@
 ---
-title: Using R Markdown to write thesis
+title: 'Using R Markdown to write your thesis'
 author: Harry Fisher
 date: '2019-08-16'
 slug: using-r-markdown-for-your-thesis
-draft: true
+#draft: true
 categories:
   - R
   - R Markdown
   - Papaja
-tags: []
+tags: 
+  - R
+  - R Markdown
+  - Papaja
 subtitle: ''
-summary: ''
+summary: ':pencil2:'
 authors: []
 lastmod: '2019-08-16T13:31:12+01:00'
 featured: no
 image:
   caption: ''
   focal_point: ''
-  preview_only: yes
 projects: []
 ---
 
-About one year into my PhD I decided that I was going to use R Markdown to write my thesis. At the time this was quiet a big decision as I had only recently started using R and playing with R Markdown, however I saw the potential and knew it was a risk worth taking to learn. 
+Roughly one year into my PhD I decided that I was going to use R Markdown to write my thesis. At the time this was quiet a big decision as I had only recently started using R and playing with R Markdown, however I saw the potential and knew it was a risk worth taking to learn. 
 
-I am currently preparing the final draft of my PhD for submission it though it would be good to reflect on what I've learnt, and share some tips and tricks I've picked up on the way that someone else might find useful.
+I am currently preparing the final draft of my PhD for submission and thought it would be good to reflect on what I've learnt, and share some tips and tricks I've picked up on the way that someone else might find useful.
 
-When I first started, Yihui Xie `bookdown` book was invaluable and got me pointing in the right direction. I also found a [blog post](https://eddjberry.netlify.com/post/writing-your-thesis-with-bookdown/) by Ed Berry that had lots of useful tricks for writing a _thesis_ specifically.
+When I first started, Yihui Xie `bookdown` package and acpanying [book](https://bookdown.org/yihui/bookdown/) was invaluable and got me pointing in the right direction. I also found a [blog post](https://eddjberry.netlify.com/post/writing-your-thesis-with-bookdown/) by Ed Berry that had lots of useful tricks for writing a _thesis_ specifically.
 
-I did the bulk of my writing and editing with these two resources and it wasn't until I had about 6 months left that I discovered `papaja` by Frederik Aust. papaja (short for 'preparing APA journal articles') builds on elements from bookdown to produce documents formatted according to American Psychological Association (APA) style. Before finding papaja, I was trying to do much of the formatting manually, and while this was a good learning experiencing, having a package that took care of most of the formatting was fantastic.
+I did the bulk of my writing and editing with these two resources and it wasn't until I had about 6 months left that I discovered `papaja` by Frederik Aust. Papaja is short for 'preparing APA journal articles, and builds on elements from bookdown to produce documents formatted according to American Psychological Association (APA) style. This was particularly useful as this was the exact format my thesis needed to be in. Before finding papaja, I was trying to do much of the formatting manually, and while this was a good learning experiencing (aka slightly frustrating...), having a package that took care of most of the formatting was fantastic.
 
-So this post is mainly going to be covering some tricks and tips I have learnt using bookdown and papaja to produce nicely formatted documents in line with the APA manual that both you (and your supervisors) will be happy with!
-I'm assuming you have some familiarity with how R and R Markdown work and it not I would highly recommend look at a [quick tour](https://rmarkdown.rstudio.com/authoring_quick_tour.html) of what it can do.
+So this post is mainly going to be covering some basic tricks and tips I have learnt using bookdown and papaja to produce nicely formatted documents in line with the APA manual that both you (and your supervisors) will be happy with!
+I'm assuming you have some familiarity with how R and R Markdown work - if not I would highly recommend a quick look at an [introduction](https://rmarkdown.rstudio.com/authoring_quick_tour.html) of what it can do.
 
 # YAML front matter
 
@@ -75,20 +77,23 @@ output:
     
 ```
 
-I found that I really didn't need to use many of these options, and they are likely more useful for when writing a journal paper in APA style. You also only need to do this once for the main document if you are following the recommended papaja workflow (e.g., one .Rmd file for each chapter in the thesis). I did however make use of a few options... 
+I actually found that I really didn't need to use many of these options, and they are likely more useful for when writing a journal paper in APA style. If you are following the recommended papaja workflow (e.g., one .Rmd file for each chapter in the thesis), you also only need one document (called index.Rmd or main.Rmd for example) with all these options. The few options i did use were:
 
+## References
 
 For my references, I used Mendelay as a organiser and exported the reference information as a .bib file which was saved in my thesis project folder as library.bib.
 
 ```yaml
 bibliography      : [library.bib]
 ```
+## Tables and figures
 
 As of the latest APA manual, figures and tables are supposed to go at the end of the document, however this isn't really necessary for a thesis and thankfully papaja has an option keep tables in text using:
 
 ```yaml
 floatsintext      : yes
 ```
+## Output format
 
 Sometimes figures and tables can move from where you want them to be, but I found setting `fig.pos = 'H'` in the chunk options to be pretty good at getting them to stay where you want. 
 
@@ -100,6 +105,8 @@ output:
     papaja::apa6_pdf: default
     #papaja::apa6_docx: default
 ```
+
+## Additional control
 
 At the end of my YAML I also had this section:
 
@@ -115,9 +122,9 @@ header-includes:
    - \setlength{\footnotesep}{0.5cm}
 ```
 
-This included some additional control over the output of the document which I borrowed from various examples I came across. For example, `-\raggedbottom` prevents LaTeX from varying the spacing between paragraphs to minimise empty space on pages, `-\AtBeginEnvironment{tabular}{\onehalfspacing}` uses 1.5 line spacing in tables vs the standard 2.0 in text, `-\captionsetup[table]{font={stretch=1}}` sets the table title to 1.0 line spacing etc..
+This included some additional control over the output of the document which I borrowed from various examples I came across. For example, `-\raggedbottom` prevents LaTeX from varying the spacing between paragraphs to minimise empty space on pages, `-\AtBeginEnvironment{tabular}{\onehalfspacing}` uses 1.5 line spacing in tables vs the standard 2.0 in text, `-\captionsetup[table]{font={stretch=1}}` sets the table title to 1.0 line spacing etc...
 
-[This article](http://rpubs.com/theycke/380678) by Tobias Heycke provides some really useful information for additional latex packages that you can also include in this section.
+[This article](http://rpubs.com/theycke/380678) by Tobias Heycke provides some really useful information for additional LaTeX packages that you can also include in this section.
 
 # Title page
 
@@ -163,7 +170,7 @@ I manually made the title page of my thesis in accordance with the university gu
 
 # Contents pages
 
-The able of contents, list of tables and list of figures can be easily included by simply using the
+The table of contents, list of tables and list of figures can be easily included by simply using the
 
 `\tableofcontents`
 
@@ -183,7 +190,7 @@ Now when you knit the main document, the introduction chapter (called "01-intro.
 
 # Summary
 
-Hopefully you might find something useful here. There are many great resources out there to help and it's often just finding the right one! Once my PhD is officially submitted I will put my project folder on GitHub so you can see exactly how I got things to work. Feel free to drop me a message if you have any questions!
+Hopefully you might find something useful here. There are many great resources out there to help and it's often just a case finding the right one! Once my PhD is officially submitted I will put my project folder on GitHub so you can see exactly how I got things to work. Feel free to drop me a message if you have any questions!
 
 
 
