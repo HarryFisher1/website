@@ -93,9 +93,9 @@ As of the latest APA manual, figures and tables are supposed to go at the end of
 ```yaml
 floatsintext      : yes
 ```
-## Output format
+Sometimes figures and tables can move from where you want them to be, but I found setting `fig.pos = 'H'` in the chunk options to be pretty good at getting them to stay where you want them. 
 
-Sometimes figures and tables can move from where you want them to be, but I found setting `fig.pos = 'H'` in the chunk options to be pretty good at getting them to stay where you want. 
+## Output format
 
 For the output, my final document was in PDF format where papaja really shines, however it does also do fairly good job at getting things right in word too. This was particularly useful for my supervisors who used word to make changes and comments on the different chapter drafts. Swapping between the outputs just 
 required commenting/uncommenting one of these lines:

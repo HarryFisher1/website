@@ -80,10 +80,10 @@ output:
 <h2>Tables and figures</h2>
 <p>As of the latest APA manual, figures and tables are supposed to go at the end of the document, however this isn’t really necessary for a thesis and thankfully papaja has an option keep tables in text using:</p>
 <pre class="yaml"><code>floatsintext      : yes</code></pre>
+<p>Sometimes figures and tables can move from where you want them to be, but I found setting <code>fig.pos = 'H'</code> in the chunk options to be pretty good at getting them to stay where you want them.</p>
 </div>
 <div id="output-format" class="section level2">
 <h2>Output format</h2>
-<p>Sometimes figures and tables can move from where you want them to be, but I found setting <code>fig.pos = 'H'</code> in the chunk options to be pretty good at getting them to stay where you want.</p>
 <p>For the output, my final document was in PDF format where papaja really shines, however it does also do fairly good job at getting things right in word too. This was particularly useful for my supervisors who used word to make changes and comments on the different chapter drafts. Swapping between the outputs just
 required commenting/uncommenting one of these lines:</p>
 <pre class="yaml"><code>output: 
