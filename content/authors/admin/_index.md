@@ -85,7 +85,12 @@ interests = [
   icon = "cv"
   icon_pack = "ai"
   link = "static/files/cv.pdf"
+  
+[[social]]
+  icon = "orcid"
+  icon_pack = "ai"
+  link = "https://orcid.org/0000-0001-7027-8057"  
 
 +++
 
-Hello! Thanks for visiting. My name is Harry Fisher and I am in the final stages of my PhD at Cardiff Metropolitan University. My research has sought novel ways to predict injury occuernce in athletes using a combination of machine learning techinques and tranditional statistical modelling. I have a deep interest in all things data science, especially using R and Python to explore, model and visualise data. Below are some of projects I am working on at the moment and some posts regarding things I have found interesting/worth sharing. Feel free to get in touch!
+Hello! Thanks for visiting. My name is Harry Fisher and I am in the final stages of my PhD at Cardiff Metropolitan University. My research has sought novel ways to predict injury occurrence in athletes using a combination of machine learning techniques and traditional statistical modelling. I have a deep interest in all things data science, especially using R and Python to explore, model and visualise data. Below are some of projects I am working on at the moment, and some posts regarding things I have found interesting/worth sharing. Feel free to get in touch!
