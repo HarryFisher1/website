@@ -27,13 +27,13 @@ projects: []
 
 <p>Roughly one year into my PhD I decided that I was going to use R Markdown to write my thesis. At the time this was quiet a big decision as I had only recently started using R and playing with R Markdown, however I saw the potential and knew it was a risk worth taking to learn.</p>
 <p>I am currently preparing the final draft of my PhD for submission and thought it would be good to reflect on what I’ve learnt, and share some tips and tricks I’ve picked up on the way that someone else might find useful.</p>
-<p>When I first started, Yihui Xie <code>bookdown</code> package and acpanying <a href="https://bookdown.org/yihui/bookdown/">book</a> was invaluable and got me pointing in the right direction. I also found a <a href="https://eddjberry.netlify.com/post/writing-your-thesis-with-bookdown/">blog post</a> by Ed Berry that had lots of useful tricks for writing a <em>thesis</em> specifically.</p>
+<p>When I first started, Yihui Xie <code>bookdown</code> package and accompanying <a href="https://bookdown.org/yihui/bookdown/">book</a> was invaluable and got me pointing in the right direction. I also found a <a href="https://eddjberry.netlify.com/post/writing-your-thesis-with-bookdown/">blog post</a> by Ed Berry that had lots of useful tricks for writing a <em>thesis</em> specifically.</p>
 <p>I did the bulk of my writing and editing with these two resources and it wasn’t until I had about 6 months left that I discovered <code>papaja</code> by Frederik Aust. Papaja is short for ’preparing APA journal articles, and builds on elements from bookdown to produce documents formatted according to American Psychological Association (APA) style. This was particularly useful as this was the exact format my thesis needed to be in. Before finding papaja, I was trying to do much of the formatting manually, and while this was a good learning experiencing (aka slightly frustrating…), having a package that took care of most of the formatting was fantastic.</p>
 <p>So this post is mainly going to be covering some basic tricks and tips I have learnt using bookdown and papaja to produce nicely formatted documents in line with the APA manual that both you (and your supervisors) will be happy with!
 I’m assuming you have some familiarity with how R and R Markdown work - if not I would highly recommend a quick look at an <a href="https://rmarkdown.rstudio.com/authoring_quick_tour.html">introduction</a> of what it can do.</p>
 <div id="yaml-front-matter" class="section level1">
 <h1>YAML front matter</h1>
-<p>After installing the necessary packages and getting things <a href="https://crsh.github.io/papaja_man/index.html">set up</a>, you can select a papaja template when creating a new .Rmd file. You’ll be greated with several YAML options:</p>
+<p>After installing the necessary packages and getting things <a href="https://crsh.github.io/papaja_man/index.html">set up</a>, you can select a papaja template when creating a new .Rmd file. You’ll be greeted with several YAML options:</p>
 <pre class="yaml"><code>title             : 
 shorttitle        : 
 
@@ -70,10 +70,10 @@ output:
     papaja::apa6_pdf: default
     #papaja::apa6_docx: default
     </code></pre>
-<p>I actually found that I really didn’t need to use many of these options, and they are likely more useful for when writing a journal paper in APA style. If you are following the recommended papaja workflow (e.g., one .Rmd file for each chapter in the thesis), you also only need one document (called index.Rmd or main.Rmd for example) with all these options. The few options i did use were:</p>
+<p>I actually found that I really didn’t need to use many of these options, and they are likely more useful for when writing a journal paper in APA style. If you are following the recommended papaja workflow (e.g., one .Rmd file for each chapter in the thesis), you also only need one document (called index.Rmd or main.Rmd for example) with all these options. The few options I did use were:</p>
 <div id="references" class="section level2">
 <h2>References</h2>
-<p>For my references, I used Mendelay as a organiser and exported the reference information as a .bib file which was saved in my thesis project folder as library.bib.</p>
+<p>For my references, I used Mendeley as a organiser and exported the reference information as a .bib file which was saved in my thesis project folder as library.bib.</p>
 <pre class="yaml"><code>bibliography      : [library.bib]</code></pre>
 </div>
 <div id="tables-and-figures" class="section level2">

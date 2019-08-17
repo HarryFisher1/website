@@ -35,12 +35,12 @@ interests = [
 
 # List qualifications (such as academic degrees)
 [[education.courses]]
-  course = "PhD in interdisciplinary prediction of sports-related injuries"
+  course = "PhD - Interdisciplinary prediction of sports-related injuries"
   institution = "Cardiff Metropolitan University"
   year = 2019
 
 [[education.courses]]
-  course = "Kinesiology and Health - focus on lower limb injury biomechanics"
+  course = "Kinesiology and Health - Focus on lower limb injury biomechanics"
   institution = "University of Wyoming"
   year = 2015
 
