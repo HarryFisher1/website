@@ -1,0 +1,57 @@
+---
+title: Visualising athletics rankings from the power of 10 site.
+author: Harry Fisher
+date: '2019-08-16'
+slug: power-of-10-data
+draft: true
+categories:
+  - DataViz
+tags: ["R", "DataViz"]
+subtitle: ''
+summary: 'Exploring web scraping within R to collect athletics rankings from www.thepowerof10.info and play with some different visualisation techniques'
+authors: []
+lastmod: '2019-08-16T12:55:18+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: yes
+projects: []
+---
+
+
+
+<p>As a keen athlete I spent many hours on athletics rankings webiste www.thepowerof10.info, comparing my performances to others (never a good idea), and stalking other athletes to see how they got on in competitions. For athletics nerds the site is fantastic, and provides all the information you need to keep up to date with the latest results.
+However, I wondered if it might be possible to explore some new ways to explore the data in a more visual format…</p>
+<div id="getting-the-data" class="section level1">
+<h1>Getting the data</h1>
+<p>Initially, I had to figure out a way to gather the data from the power of 10 website. As you can see in the screenshot below, the rankings are already in a table format, so thankfully it wasn’t too difficult to figure something out.</p>
+<p>This was my first time using the rvest and RSelenium packages, so I’m sure this code can be imrpvode somewhat… It does however, see to do the trick.</p>
+<p>First I generated</p>
+<pre><code>```r
+readtable &lt;- function(url){ 
+  main &lt;- read_html(url) 
+  rankings &lt;- main %&gt;% 
+html_nodes(xpath = &#39;//*[@id=&quot;cphBody_lblCachedRankingList&quot;]/table&#39;) %&gt;% 
+html_table() %&gt;% 
+data.frame() %&gt;% 
+select(1:13) %&gt;% 
+set_names(c(&quot;Rank&quot;,&quot;Perf&quot;, &quot;windy&quot;, &quot;windspeed&quot;, &quot;PB&quot;, &quot;newpb&quot;, &quot;Name&quot;, &quot;agegroup&quot;, &quot;month_year&quot;,&quot;Coach&quot;,&quot;Club&quot;,&quot;Venue&quot;, &quot;Date&quot;)) %&gt;% 
+mutate(year = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]]),
+       event = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]])) %&gt;% 
+mutate_at(vars(Name), funs((replace(., .==&quot;&quot;, NA)))) %&gt;% 
+mutate(Name = na.locf(Name))
+}
+```</code></pre>
+<p>A second function I used was to get each individual athlete’s unique identifier number. With this number I could get each athletes individual rankings when required.</p>
+<pre class="r"><code>athleteurl &lt;- function(url){
+  main &lt;- read_html(url)
+  athleteinfo &lt;- tibble(Name = html_text(html_nodes(main, &quot;td:nth-child(7) a&quot;), &quot;href&quot;),
+                        athleteurl = html_attr(html_nodes(main, &quot;td:nth-child(7) a&quot;), &quot;href&quot;),
+                        year = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]]),
+                        event = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]]))
+  athleteinfo &lt;- athleteinfo %&gt;% 
+    filter(Name != &quot;&quot;)
+}</code></pre>
+<p>To use these functions I simply passed a url to each function</p>
+</div>

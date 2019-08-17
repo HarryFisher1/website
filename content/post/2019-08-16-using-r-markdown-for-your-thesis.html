@@ -1,0 +1,151 @@
+---
+title: Using R Markdown to write thesis
+author: Harry Fisher
+date: '2019-08-16'
+slug: using-r-markdown-for-your-thesis
+draft: true
+categories:
+  - R
+  - R Markdown
+  - Papaja
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2019-08-16T13:31:12+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: yes
+projects: []
+---
+
+
+
+<p>About one year into my PhD I decided that I was going to use R Markdown to write my thesis. At the time this was quiet a big decision as I had only recently started using R and playing with R Markdown, however I saw the potential and knew it was a risk worth taking to learn.</p>
+<p>I am currently preparing the final draft of my PhD for submission it though it would be good to reflect on what I’ve learnt, and share some tips and tricks I’ve picked up on the way that someone else might find useful.</p>
+<p>When I first started, Yihui Xie <code>bookdown</code> book was invaluable and got me pointing in the right direction. I also found a <a href="https://eddjberry.netlify.com/post/writing-your-thesis-with-bookdown/">blog post</a> by Ed Berry that had lots of useful tricks for writing a <em>thesis</em> specifically.</p>
+<p>I did the bulk of my writing and editing with these two resources and it wasn’t until I had about 6 months left that I discovered <code>papaja</code> by Frederik Aust. papaja (short for ‘preparing APA journal articles’) builds on elements from bookdown to produce documents formatted according to American Psychological Association (APA) style. Before finding papaja, I was trying to do much of the formatting manually, and while this was a good learning experiencing, having a package that took care of most of the formatting was fantastic.</p>
+<p>So this post is mainly going to be covering some tricks and tips I have learnt using bookdown and papaja to produce nicely formatted documents in line with the APA manual that both you (and your supervisors) will be happy with!
+I’m assuming you have some familiarity with how R and R Markdown work and it not I would highly recommend look at a <a href="https://rmarkdown.rstudio.com/authoring_quick_tour.html">quick tour</a> of what it can do.</p>
+<div id="yaml-front-matter" class="section level1">
+<h1>YAML front matter</h1>
+<p>After installing the necessary packages and getting things <a href="https://crsh.github.io/papaja_man/index.html">set up</a>, you can select a papaja template when creating a new .Rmd file. You’ll be greated with several YAML options:</p>
+<pre class="yaml"><code>title             : 
+shorttitle        : 
+
+author: 
+  - name          : &quot;blank&quot;
+    affiliation   : &quot;&quot;
+    corresponding : yes    # Define only one corresponding author
+    address       : &quot;-&quot;
+    email         : &quot;-&quot;
+
+affiliation:
+  - id            : &quot;&quot;
+    institution   : &quot;&quot;
+
+authornote: 
+abstract: 
+  
+keywords          : ~
+wordcount         : ~
+
+bibliography      : [library.bib]
+
+floatsintext      : yes
+figurelist        : yes
+tablelist         : yes
+footnotelist      : no
+linenumbers       : no
+mask              : no
+draft             : no
+
+documentclass     : &quot;apa6&quot;
+classoption       : &quot;man&quot;
+output: 
+    papaja::apa6_pdf: default
+    #papaja::apa6_docx: default
+    </code></pre>
+<p>I found that I really didn’t need to use many of these options, and they are likely more useful for when writing a journal paper in APA style. You also only need to do this once for the main document if you are following the recommended papaja workflow (e.g., one .Rmd file for each chapter in the thesis). I did however make use of a few options…</p>
+<p>For my references, I used Mendelay as a organiser and exported the reference information as a .bib file which was saved in my thesis project folder as library.bib.</p>
+<pre class="yaml"><code>bibliography      : [library.bib]</code></pre>
+<p>As of the latest APA manual, figures and tables are supposed to go at the end of the document, however this isn’t really necessary for a thesis and thankfully papaja has an option keep tables in text using:</p>
+<pre class="yaml"><code>floatsintext      : yes</code></pre>
+<p>Sometimes figures and tables can move from where you want them to be, but I found setting <code>fig.pos = 'H'</code> in the chunk options to be pretty good at getting them to stay where you want.</p>
+<p>For the output, my final document was in PDF format where papaja really shines, however it does also do fairly good job at getting things right in word too. This was particularly useful for my supervisors who used word to make changes and comments on the different chapter drafts. Swapping between the outputs just
+required commenting/uncommenting one of these lines:</p>
+<pre class="yaml"><code>output: 
+    papaja::apa6_pdf: default
+    #papaja::apa6_docx: default</code></pre>
+<p>At the end of my YAML I also had this section:</p>
+<pre class="yaml"><code>header-includes:
+   - \raggedbottom
+   - \usepackage{setspace}
+   - \AtBeginEnvironment{tabular}{\onehalfspacing}
+   - \AtBeginEnvironment{lltable}{\onehalfspacing}
+   - \captionsetup[table]{font={stretch=1}}
+   - \captionsetup[figure]{font={stretch=1}}
+   - \setlength{\skip\footins}{1cm}
+   - \setlength{\footnotesep}{0.5cm}</code></pre>
+<p>This included some additional control over the output of the document which I borrowed from various examples I came across. For example, <code>-\raggedbottom</code> prevents LaTeX from varying the spacing between paragraphs to minimise empty space on pages, <code>-\AtBeginEnvironment{tabular}{\onehalfspacing}</code> uses 1.5 line spacing in tables vs the standard 2.0 in text, <code>-\captionsetup[table]{font={stretch=1}}</code> sets the table title to 1.0 line spacing etc..</p>
+<p><a href="http://rpubs.com/theycke/380678">This article</a> by Tobias Heycke provides some really useful information for additional latex packages that you can also include in this section.</p>
+</div>
+<div id="title-page" class="section level1">
+<h1>Title page</h1>
+<p>I manually made the title page of my thesis in accordance with the university guidelines. For this step I would really recommend just searching for a LaTeX template and just playing around until you get it looking how you want.</p>
+<pre class="r"><code>\thispagestyle{empty}
+    \begin{center}
+        \vspace*{0.5cm}
+ 
+        \Large
+        \textbf{An interdisciplinary examination of stress and injury occurence in athletes.}
+ 
+        \vspace{0.3cm}
+        \large
+        
+        by
+ 
+        \vspace{0.3cm}
+        \Large
+        \textbf{Harry Fisher, BSc, MSc}
+ 
+        \vspace{0.3cm}
+ 
+        A thesis presented for the degree of Doctor of Philosophy\\
+        Cardiff Metropolitan University\\
+        August 2019\\
+        
+        \vspace{1cm}
+                
+        \begin{tabular}{ll}
+         \textbf{Director of studies:} &amp; Dr Marianne Gittoes\\
+         \textbf{Supervisors:} &amp; Professor Lynne Evans\\
+         &amp; Professor Richard Mullen\\
+         \end{tabular}
+        
+        \vspace{1cm}
+                                  
+        \includegraphics[width=0.3\textwidth]{figs/cardiffmetlogo}
+ 
+\end{center}</code></pre>
+</div>
+<div id="contents-pages" class="section level1">
+<h1>Contents pages</h1>
+<p>The able of contents, list of tables and list of figures can be easily included by simply using the</p>
+<p><code>\tableofcontents</code></p>
+<p><code>\listoftables</code></p>
+<p><code>\listoffigures</code></p>
+<p>commands in your main document. You can separate them by using the <code>\clearpage</code> command.</p>
+</div>
+<div id="the-rest-of-the-document" class="section level1">
+<h1>The rest of the document</h1>
+<p>If you’re familiar with using R Markdown you can write the chapters like you would any other document. Once they are down you can include the following line in a code chunk in your main document:</p>
+<p><code>{child="01-intro.Rmd"}</code></p>
+<p>Now when you knit the main document, the introduction chapter (called “01-intro.Rmd” in this case) will be included after your title pages. Papaja will also automatically generates tables of contents depending on your the headers in your other files, as well as number all tables and figures.</p>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>Hopefully you might find something useful here. There are many great resources out there to help and it’s often just finding the right one! Once my PhD is officially submitted I will put my project folder on GitHub so you can see exactly how I got things to work. Feel free to drop me a message if you have any questions!</p>
+</div>

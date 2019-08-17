@@ -1,0 +1,78 @@
+---
+title: Visualising athletics rankings from the power of 10 site.
+author: Harry Fisher
+date: '2019-08-16'
+slug: power-of-10-data
+draft: true
+categories:
+  - DataViz
+tags: ["R", "DataViz"]
+subtitle: ''
+summary: 'Exploring web scraping within R to collect athletics rankings from www.thepowerof10.info and play with some different visualisation techniques'
+authors: []
+lastmod: '2019-08-16T12:55:18+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: yes
+projects: []
+---
+
+As a keen athlete I spent many hours on athletics rankings webiste www.thepowerof10.info, comparing my performances to others (never a good idea), and stalking other athletes to see how they got on in competitions. For athletics nerds the site is fantastic, and provides all the information you need to keep up to date with the latest results.
+However, I wondered if it might be possible to explore some new ways to explore the data in a more visual format...
+
+# Getting the data
+
+Initially, I had to figure out a way to gather the data from the power of 10 website. As you can see in the screenshot below, the rankings are already in a table format, so thankfully it wasn't too difficult to figure something out.
+
+
+This was my first time using the rvest and RSelenium packages, so I'm sure this code can be imrpvode somewhat... It does however, see to do the trick.
+
+First I generated
+
+    ```{r echo=TRUE, eval=FALSE}
+    
+readtable <- function(url){ 
+  main <- read_html(url) 
+  rankings <- main %>% 
+    html_nodes(xpath = '//*[@id="cphBody_lblCachedRankingList"]/table') %>% 
+    html_table() %>% 
+    data.frame() %>% 
+    select(1:13) %>% 
+    set_names(c("Rank","Perf", "windy", "windspeed", "PB", "newpb", "Name", "agegroup", "month_year","Coach","Club","Venue", "Date")) %>% 
+    mutate(year = as.numeric(str_extract_all(url, "[0-9]+")[[1]][[3]]),
+           event = as.numeric(str_extract_all(url, "[0-9]+")[[1]][[2]])) %>% 
+    mutate_at(vars(Name), funs((replace(., .=="", NA)))) %>% 
+    mutate(Name = na.locf(Name))
+}
+    
+    ```
+
+
+
+A second function I used was to get each individual athlete's unique identifier number. With this number I could get each athletes individual rankings when required.
+
+```{r echo=TRUE, eval=FALSE}
+athleteurl <- function(url){
+  main <- read_html(url)
+  athleteinfo <- tibble(Name = html_text(html_nodes(main, "td:nth-child(7) a"), "href"),
+                        athleteurl = html_attr(html_nodes(main, "td:nth-child(7) a"), "href"),
+                        year = as.numeric(str_extract_all(url, "[0-9]+")[[1]][[3]]),
+                        event = as.numeric(str_extract_all(url, "[0-9]+")[[1]][[2]]))
+  athleteinfo <- athleteinfo %>% 
+    filter(Name != "")
+}
+```
+
+
+To use these functions I simply passed a url to each function
+
+```{r}
+
+
+
+```
+
+
+

@@ -1,0 +1,199 @@
+---
+title: python vs r for machine learning
+author: Harry Fisher
+date: '2019-08-16'
+slug: python-vs-r-for-machine-learning
+draft: true 
+categories:
+  - Python
+  - R
+  - Machine Learning
+tags:
+  - Python
+  - R
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2019-08-16T18:34:59+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+I often see posts about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don't see any harm in exploring python a little more. 
+
+I thought it would be intersting to compare R and python in a couple of coomon machine learning techniques. Given my slight R bias, I am going to be using the recticulate package to run python code within R 
+
+
+
+. I have chosen three ML techinques; logisitic regression, tree and a deep learning alogorithm and want to show how each method can be use in both R and Python.
+
+For the example I am using the ... well-known data set. The point is not to try and generate any novel findings, but simply to compare the methods available.
+
+
+# data
+
+
+```{r}
+library(tidyverse)
+library(reticulate)
+
+```
+
+
+# logistic regression
+
+Lets start fairly simple and compare logistic regression using the UCLA admission data.
+
+```{r}
+df <- read_csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+
+head(df)
+```
+
+
+admit is ourvariale of interest and represents whether a student was admitted or not.
+
+We also have three predictors
+  
+  - GRE score
+  - GPA score
+  - Rank 
+
+
+## R
+
+```{r}
+df <- read.csv("_data/Social_Network_Ads.csv")
+
+```
+
+
+<!-- ```{r} -->
+<!-- library(caTools) -->
+<!-- set.seed(123) -->
+<!-- split = sample.split(df$Purchased, SplitRatio = 0.75) -->
+<!-- training_set = subset(df, split == TRUE) -->
+<!-- test_set = subset(df, split == FALSE) -->
+
+
+<!-- # Feature Scaling -->
+<!-- training_set[-3] = scale(training_set[-3]) -->
+<!-- test_set[-3] = scale(test_set[-3]) -->
+
+<!-- # Fitting Logistic Regression to the Training set -->
+<!-- classifier = glm(formula = Purchased ~ ., -->
+<!--                  family = binomial, -->
+<!--                  data = training_set) -->
+
+<!-- # Predicting the Test set results -->
+<!-- prob_pred = predict(classifier, type = 'response', newdata = test_set[-3]) -->
+<!-- y_pred = ifelse(prob_pred > 0.5, 1, 0) -->
+
+<!-- # Making the Confusion Matrix -->
+<!-- cm = table(test_set[, 3], y_pred > 0.5) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- library(reticulate) -->
+<!-- use_condaenv("tensorflow") -->
+<!-- py_config() -->
+
+<!-- ``` -->
+<!-- ## Python -->
+
+
+<!-- ```{python } -->
+
+<!-- dataset = r.df -->
+
+<!-- import numpy as np -->
+<!-- import matplotlib.pyplot as plt -->
+<!-- import pandas as pd -->
+
+<!-- # Importing the dataset -->
+<!-- X = dataset.iloc[:, [2, 3]].values -->
+<!-- y = dataset.iloc[:, 4].values -->
+
+<!-- # Splitting the dataset into the Training set and Test set -->
+<!-- from sklearn.model_selection import train_test_split -->
+<!-- X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0) -->
+
+<!-- # Feature Scaling -->
+<!-- from sklearn.preprocessing import StandardScaler -->
+<!-- sc = StandardScaler() -->
+<!-- X_train = sc.fit_transform(X_train) -->
+<!-- X_test = sc.transform(X_test) -->
+
+<!-- # Fitting Logistic Regression to the Training set -->
+<!-- from sklearn.linear_model import LogisticRegression -->
+<!-- classifier = LogisticRegression(random_state = 0) -->
+<!-- classifier.fit(X_train, y_train) -->
+
+<!-- # Predicting the Test set results -->
+<!-- y_pred = classifier.predict(X_test) -->
+
+<!-- # Making the Confusion Matrix -->
+<!-- from sklearn.metrics import confusion_matrix -->
+<!-- cm = confusion_matrix(y_test, y_pred) -->
+
+<!-- # Visualising the Training set results -->
+<!-- from matplotlib.colors import ListedColormap -->
+<!-- X_set, y_set = X_train, y_train -->
+<!-- X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01), -->
+<!--                      np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01)) -->
+<!-- plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape), -->
+<!--              alpha = 0.75, cmap = ListedColormap(('red', 'green'))) -->
+<!-- plt.xlim(X1.min(), X1.max()) -->
+<!-- plt.ylim(X2.min(), X2.max()) -->
+<!-- for i, j in enumerate(np.unique(y_set)): -->
+<!--     plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1], -->
+<!--                 c = ListedColormap(('red', 'green'))(i), label = j) -->
+<!-- plt.title('Logistic Regression (Training set)') -->
+<!-- plt.xlabel('Age') -->
+<!-- plt.ylabel('Estimated Salary') -->
+<!-- plt.legend() -->
+<!-- plt.show() -->
+<!-- ``` -->
+
+
+
+# tree
+
+## R
+```{r}
+
+```
+
+## Python
+```{python}
+
+```
+
+
+
+# deep learning
+
+
+## R
+```{r}
+
+```
+
+## Python
+```{python}
+
+```
+
+
+
+
+
+
+
+
