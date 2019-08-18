@@ -1,0 +1,34 @@
+---
+title: Introduction to Bayesian Networks
+author: Harry Fisher
+date: '2019-08-18'
+slug: introduction-to-bayesian-networks
+categories:
+  - R
+  - Bayesian Networks
+tags:
+  - Bayesian Networks
+  - R
+subtitle: ''
+summary: 'Quick introduction to Bayesian Networks :chart_with_upwards_trend: '
+authors: []
+lastmod: '2019-08-18T11:54:22+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+Bayesian Networks (BNs) formed the basis of my PhD research. I was fortunate to receive guidance from Dr [Marco Scutari](http://www.bnlearn.com/about/) who is the author of the [`bnlearn`](https://cran.r-project.org/web/packages/bnlearn/index.html) package that provides a great set of tools for working with BNs in R. Marco is also co author of ["Bayesian Networks: With Examples in R"](https://www.crcpress.com/Bayesian-Networks-With-Examples-in-R/Scutari-Denis/p/book/9781482225587) which proved to be a valuable resource for the conceptual understanding and implementation of BNs in R
+
+BNs were a fairly novel form of analysis in my field (sports injury research), so I wrote a short document that provided a brief introduction and overview to the method. The aim is for someone who has never heard of BN analysis before to be able to pick up the key concepts and be more comfortable reading more complex literature regarding BNs. 
+
+View the document [here](https://htmlpreview.github.io/?https://github.com/HarryFisher1/bn_supplementary/blob/master/bn_supp.html).
+
+
+![](/post/2019-08-18-introduction-to-bayesian-networks_files/bn_example.png)
+
+
+

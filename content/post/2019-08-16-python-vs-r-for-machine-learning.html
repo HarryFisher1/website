@@ -1,5 +1,5 @@
 ---
-title: python vs r for machine learning
+title: 'Python vs R for machine learning'
 author: Harry Fisher
 date: '2019-08-16'
 slug: python-vs-r-for-machine-learning
@@ -12,7 +12,7 @@ tags:
   - Python
   - R
 subtitle: ''
-summary: ''
+summary: 'Exploring machine learning techinques in different languages :robot:'
 authors: []
 lastmod: '2019-08-16T18:34:59+01:00'
 featured: no
@@ -21,48 +21,35 @@ image:
   focal_point: ''
   preview_only: no
 projects: []
+output: distill::distill_article
 ---
 
 
 
-<p>I often see posts about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don’t see any harm in exploring python a little more.</p>
-<p>I thought it would be intersting to compare R and python in a couple of coomon machine learning techniques. Given my slight R bias, I am going to be using the recticulate package to run python code within R</p>
+<p>I often see things about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don’t see any harm in exploring python a little more… “Be like water!” a wise man once said…</p>
+<p>I thought it would be intersting to compare R and python in a couple of common machine learning techniques. Given my slight R bias, I am going to be using the <code>recticulate</code> package to run python scripts within R.</p>
 <p>. I have chosen three ML techinques; logisitic regression, tree and a deep learning alogorithm and want to show how each method can be use in both R and Python.</p>
 <p>For the example I am using the … well-known data set. The point is not to try and generate any novel findings, but simply to compare the methods available.</p>
 <div id="data" class="section level1">
 <h1>data</h1>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## -- Attaching packages -------------------</code></pre>
-<pre><code>## v ggplot2 3.2.0     v purrr   0.3.2
+<pre><code>## -- Attaching packages ---------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## v ggplot2 3.2.1     v purrr   0.3.2
 ## v tibble  2.1.3     v dplyr   0.8.3
 ## v tidyr   0.8.3     v stringr 1.4.0
 ## v readr   1.3.1     v forcats 0.4.0</code></pre>
-<pre><code>## -- Conflicts --- tidyverse_conflicts() --
+<pre><code>## -- Conflicts ------------------- tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(reticulate)</code></pre>
 </div>
 <div id="logistic-regression" class="section level1">
 <h1>logistic regression</h1>
-<p>Lets start fairly simple and compare logistic regression using the UCLA admission data.</p>
-<pre class="r"><code>df &lt;- read_csv(&quot;https://stats.idre.ucla.edu/stat/data/binary.csv&quot;)</code></pre>
-<pre><code>## Parsed with column specification:
-## cols(
-##   admit = col_double(),
-##   gre = col_double(),
-##   gpa = col_double(),
-##   rank = col_double()
-## )</code></pre>
-<pre class="r"><code>head(df)</code></pre>
-<pre><code>## # A tibble: 6 x 4
-##   admit   gre   gpa  rank
-##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-## 1     0   380  3.61     3
-## 2     1   660  3.67     3
-## 3     1   800  4        1
-## 4     1   640  3.19     4
-## 5     0   520  2.93     4
-## 6     1   760  3        2</code></pre>
+<!-- Lets start fairly simple and compare logistic regression using the UCLA admission data. -->
+<!-- ```{r} -->
+<!-- df <- read_csv("https://stats.idre.ucla.edu/stat/data/binary.csv") -->
+<!-- head(df) -->
+<!-- ``` -->
 <p>admit is ourvariale of interest and represents whether a student was admitted or not.</p>
 <p>We also have three predictors</p>
 <ul>

@@ -1,5 +1,5 @@
 ---
-title: python vs r for machine learning
+title: 'Python vs R for machine learning'
 author: Harry Fisher
 date: '2019-08-16'
 slug: python-vs-r-for-machine-learning
@@ -21,6 +21,7 @@ image:
   focal_point: ''
   preview_only: no
 projects: []
+output: distill::distill_article
 ---
 
 I often see things about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don't see any harm in exploring python a little more... "Be like water!" a wise man once said...
@@ -46,13 +47,13 @@ library(reticulate)
 
 # logistic regression
 
-Lets start fairly simple and compare logistic regression using the UCLA admission data.
+<!-- Lets start fairly simple and compare logistic regression using the UCLA admission data. -->
 
-```{r}
-df <- read_csv("https://stats.idre.ucla.edu/stat/data/binary.csv")
+<!-- ```{r} -->
+<!-- df <- read_csv("https://stats.idre.ucla.edu/stat/data/binary.csv") -->
 
-head(df)
-```
+<!-- head(df) -->
+<!-- ``` -->
 
 
 admit is ourvariale of interest and represents whether a student was admitted or not.

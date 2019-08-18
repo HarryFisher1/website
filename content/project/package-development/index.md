@@ -31,10 +31,7 @@ I would also like to do something with the athletics data I have been working wi
 
 I have been working on a [dashboard](https://harryfish.shinyapps.io/resultsdashboard/) to summarise athleteics results, but wonder if there is something more I could do... :thinking:
 
-To be continued!
-
-
-
+To be continued...!
 
 
 
