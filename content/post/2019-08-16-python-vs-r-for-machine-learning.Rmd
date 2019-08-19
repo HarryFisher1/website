@@ -1,8 +1,8 @@
 ---
-title: 'Python vs R for machine learning'
+title: 'Python vs R for classification '
 author: Harry Fisher
-date: '2019-08-16'
-slug: python-vs-r-for-machine-learning
+date: '2019-08-19'
+slug: Python-vs-r-for-machine-learning
 draft: true 
 categories:
   - Python
@@ -12,7 +12,7 @@ tags:
   - Python
   - R
 subtitle: ''
-summary: 'Exploring machine learning techinques in different languages :robot:'
+summary: 'Exploring machine learning techniques in different languages :robot:'
 authors: []
 lastmod: '2019-08-16T18:34:59+01:00'
 featured: no
@@ -24,176 +24,270 @@ projects: []
 output: distill::distill_article
 ---
 
-I often see things about which python vs R and which one is superior for data science. My take is that they are both useful tools and have their own strengths and weakneses. Recently I have been trying to expand my python knowledge as I think it is important to have a range of tools available for any data science problem. I have found R to be more than adequate in most instances, however I don't see any harm in exploring python a little more... "Be like water!" a wise man once said...
+I often see comments about Python vs R for "insert any kind of task here". They are often treated like arch enemies in an internal struggle for superiority where there can only be one winner. 
+While they are of course very different languages, my take is that they are both extremely useful tools and have their own strengths and weaknesses and can be used interchangeably. 
+Recently, I have been trying to expand my Python knowledge as I think it is important to have a range of tools available for any data science problem. 
+While I have found R to be more than adequate for problems I have faced, I thought it would be good practice to implement some different models using both languages.
 
-I thought it would be intersting to compare R and python in a couple of common machine learning techniques. Given my slight R bias, I am going to be using the `recticulate` package to run python scripts within R. 
+In this post I will compare how R and Python can be used to address a simple classification problem using a couple of common techniques. 
+Given my slight R bias, I am going to be using the [`recticulate`](https://cran.r-project.org/web/packages/reticulate/index.html) package to run Python code within R. 
 
+I have chosen three different methods; logistic regression, random forests and Support Vector Machines (SVM) as these are widely used for many types of classification problems.
 
+- In R, I'll be using the [`tidymodels`](https://www.tidyverse.org/articles/2018/08/tidymodels-0-0-1/) packages, including [`recipies`](https://cran.r-project.org/web/packages/recipes/index.html) and [`parsnip`](https://cran.r-project.org/web/packages/parsnip/index.html) for preparing the data and fitting the models and [`yardstick`](https://cran.r-project.org/web/packages/yardstick/index.html) for model evaluation.
 
-. I have chosen three ML techinques; logisitic regression, tree and a deep learning alogorithm and want to show how each method can be use in both R and Python.
-
-For the example I am using the ... well-known data set. The point is not to try and generate any novel findings, but simply to compare the methods available.
-
-
-# data
-
-
-```{r}
-library(tidyverse)
-library(reticulate)
-
-```
+- In Python, I'll be using the [Scikit-learn](https://scikit-learn.org/stable/tutorial/basic/tutorial.html) library which as many different modelling possibilities.
 
 
-# logistic regression
+# The data
 
-<!-- Lets start fairly simple and compare logistic regression using the UCLA admission data. -->
+I'll be using is the credit dataset that comes with the recipes package. The data contains 4454 rows with several predictor variables including job, marital status and age, and the variable we'll be trying to predict, credit status, which can be 'good' or 'bad'. 
 
-<!-- ```{r} -->
-<!-- df <- read_csv("https://stats.idre.ucla.edu/stat/data/binary.csv") -->
+```{r loadthemin, message=FALSE}
+library(tidyverse) 
+library(tidymodels)
+library(reticulate) # For using Python in R
+library(janitor) # data cleaning
+library(DataExplorer) # EZ data Viz
+library(parsnip) # interface for different modelling methods
+library(knitr)
 
-<!-- head(df) -->
-<!-- ``` -->
-
-
-admit is ourvariale of interest and represents whether a student was admitted or not.
-
-We also have three predictors
+use_condaenv("tensorflow") # pointing R to my conda environment "tensorflow" which has many appropriate libraries intalled
   
-  - GRE score
-  - GPA score
-  - Rank 
+```
 
+```{r data}
+data("credit_data")
+df <- credit_data %>% 
+  clean_names()
 
-## R
-
-```{r}
-df <- read.csv("_data/Social_Network_Ads.csv")
-
+head(df) %>% 
+  kable()
 ```
 
 
-<!-- ```{r} -->
-<!-- library(caTools) -->
-<!-- set.seed(123) -->
-<!-- split = sample.split(df$Purchased, SplitRatio = 0.75) -->
-<!-- training_set = subset(df, split == TRUE) -->
-<!-- test_set = subset(df, split == FALSE) -->
+I Like to use the [`DataExplorer`](https://cran.r-project.org/web/packages/DataExplorer/vignettes/dataexplorer-intro.html) package to perform some quick checks on the data.
+
+```{r prep}
+introduce(df) %>% 
+  gather(key, value) %>% 
+  kable()
+```
+
+This tells us there are some missing values, and a mix of continuous and categorical predictors meaning we will have to do some preprocessing.
+
+Thankfully, the recipes package makes this very straightforward:
+
+- First, we'll split the data into training and testing sets.
+- Then we'll use the "step_X" functions in recipes to perform the necessary preprocessing.
+- Before finally "baking" our processed data set that we can use for our models (a definite cooking them going on here...).
 
 
-<!-- # Feature Scaling -->
-<!-- training_set[-3] = scale(training_set[-3]) -->
-<!-- test_set[-3] = scale(test_set[-3]) -->
+```{r prepro}
+set.seed(123)
+train_test_split <- initial_split(df)
 
-<!-- # Fitting Logistic Regression to the Training set -->
-<!-- classifier = glm(formula = Purchased ~ ., -->
-<!--                  family = binomial, -->
-<!--                  data = training_set) -->
+df_train <- training(train_test_split)
+df_test <- testing(train_test_split)
 
-<!-- # Predicting the Test set results -->
-<!-- prob_pred = predict(classifier, type = 'response', newdata = test_set[-3]) -->
-<!-- y_pred = ifelse(prob_pred > 0.5, 1, 0) -->
+df_pro <- recipe(status ~ ., data = df) %>% 
+  step_knnimpute(all_predictors()) %>% # missing values
+  step_dummy(all_predictors(), -all_numeric()) %>% # dummify categoricals
+  step_center(all_predictors()) %>% # center 
+  step_scale(all_predictors()) # scale
 
-<!-- # Making the Confusion Matrix -->
-<!-- cm = table(test_set[, 3], y_pred > 0.5) -->
+trained_rec <- prep(df_pro, training = df_train)
+
+train_data <- bake(trained_rec, new_data = df_train)
+test_data  <- bake(trained_rec, new_data = df_test) 
+
+```
+
+# Logistic regression
+
+First up is a simple logistic regression. 
+
+- First we'll specify the model using the parsnip interface.
+- Then we'll make predictions  using the model on our test data set
+- We can then assess how well the model did using some common model assessment criteria
+
+In R we can do...
+
+```{r logreg}
+set.seed(124)
+
+model_log <- 
+  logistic_reg() %>% 
+  set_engine("glm") %>% 
+  fit(status ~ ., data = train_data)
+
+pred_log <- model_log %>% 
+  predict(new_data = test_data) %>% 
+  bind_cols(test_data %>% select(status))
+
+# function to evaluate model performance
+eval <- function(model){
+  model %>% 
+  conf_mat(.pred_class, status) %>%
+  summary() %>%
+  select(-.estimator) %>%
+  filter(.metric %in%
+    c("accuracy", "precision", "recall", "f_meas"))
+  kable()
+}
+
+eval(pred_log)
+
+```
+
+The logistic regression model gave us 78 % accuracy, which is not bad considering how little effort we put into the modelling step.
+
+For Python...
+
+```{python logregpy, message = FALSE}
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+
+# Get r data into Python
+
+X = r.train_data  
+y = r.test_data 
+
+# Prepare training and testing sets
+
+X_train = X.iloc[:, 1:23]
+y_train = X.iloc[:,0]
+X_test = y.iloc[:, 1:23]
+y_test = y.iloc[:,0]
+
+# Fit the model
+
+logreg = LogisticRegression(solver='lbfgs', random_state = 124)
+fit = logreg.fit(X_train, y_train)
+
+# Predict
+
+y_pred_log = logreg.predict(X_test)
+
+
+from sklearn.metrics import classification_report
+
+print(classification_report(y_test, y_pred_log))
+
+
+```
+
+Unsurprisingly the model gives very similar results with again an accuracy of 78%.
+
+# Random Forest
+
+Random forests are a popular ML technique for classification problems, and improve upon a single decision tree by combining many different trees to improve our predictions (for a great overview see [here](https://medium.com/@williamkoehrsen/random-forest-simple-explanation-377895a60d2d)).
+
+In R, all we need to do is change the model specification and we're good to go. We can actually combine some of the code to reduce the number of lines it takes.
+```{r rf}
+
+set.seed(125)  
+
+model_rf <- 
+  rand_forest(mode = 'classification', trees = 1000) %>% 
+  set_engine("ranger") %>% 
+  fit(status ~ ., data = train_data) %>% 
+  predict(new_data = test_data) %>% 
+  bind_cols(test_data %>% select(status))
+
+eval(model_rf)
+```
+
+Interesting, this model performs marginally worse than our logistic regression, but still rounds to 78% accuracy. There are many other techniques we could use to improve the model (e.g., cross validation) but for simplicity sakes we'll leave it as that for now.
+
+In Python, we only need three lines of code:
+
+```{python rfpy, message = FALSE}
+
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(n_estimators = 1000, random_state = 125)
+f_fit = rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+
+print(classification_report(y_test, y_pred_rf))
+
+```
+
+Again, very similar performance to the R model.
+
+
+As a quick bonus we can take a look at the most important feastures in the data set.
+
+```{python warning = FALSE}
+feature_imp = pd.Series(rf.feature_importances_,index=list(X_train.columns)).sort_values(ascending=False)
+print(feature_imp.head())
+```
+
+The output shows the top 5 most important features that are used to make predictions in the model. 
+
+# Support Vector Machines
+
+Support vector machines are another technique that can be used for classification. 
+
+Defined [here](https://towardsdatascience.com/support-vector-machine-introduction-to-machine-learning-algorithms-934a444fca47):
+
+> The objective of the support vector machine algorithm is to find a hyperplane in an N-dimensional space(N — the number of features) that distinctly classifies the data points.
+
+Again, these can be easily implemented in both R and Python.
+
+In R:
+
+```{r svm, message=FALSE, warning=FALSE}
+set.seed(127)
+
+model_svm <- 
+  svm_poly(mode = 'classification') %>% 
+  set_engine("kernlab") %>% 
+  fit(status ~., data = train_data) %>% 
+  predict(new_data = test_data) %>% 
+  bind_cols(test_data %>% select(status))
+
+eval(model_svm)
+
+```
+
+Again in Python its a simple three-liner:
+
+```{python svmpy}
+
+from sklearn.svm import SVC
+
+clf = SVC(kernel='linear', random_state = 127)
+svm_fit = clf.fit(X_train, y_train)
+y_pred_svm = clf.predict(X_test)
+
+print(classification_report(y_test, y_pred_svm))
+
+```
+
+SVM performs slightly worse than both the logstic regression and random forest models, achieving an accuracy of 77%. However, like random forests, SVMs have several optimisation factors we could modify to improve the models performance.
+
+# Summary
+
+The point here was to just explore how different models could be specified in both R and Python using popular packages and libraries.
+There are many other steps we could take to improve each models performance, but this post would be getting quite long if we optimised each example. 
+I may do some plotting examples in R and Python in a future blog post, but until then, thanks for reading!
+
+
+
+<!-- ```{Python echo = FALSE} -->
+
+<!-- print('Logistic regression accuracy: {:.2f}'.format(logreg.score(X_test, y_test))) -->
+<!-- print("Random Forest Accuracy: {:.2f}".format(metrics.accuracy_score(y_test, y_pred_rf))) -->
+<!-- print("SVM Accuracy: {:.2f}".format(metrics.accuracy_score(y_test, y_pred_svm))) -->
+
+
 <!-- ``` -->
-
-
-
-<!-- ```{r} -->
-<!-- library(reticulate) -->
-<!-- use_condaenv("tensorflow") -->
-<!-- py_config() -->
-
-<!-- ``` -->
-<!-- ## Python -->
-
-
-<!-- ```{python } -->
-
-<!-- dataset = r.df -->
-
-<!-- import numpy as np -->
-<!-- import matplotlib.pyplot as plt -->
-<!-- import pandas as pd -->
-
-<!-- # Importing the dataset -->
-<!-- X = dataset.iloc[:, [2, 3]].values -->
-<!-- y = dataset.iloc[:, 4].values -->
-
-<!-- # Splitting the dataset into the Training set and Test set -->
-<!-- from sklearn.model_selection import train_test_split -->
-<!-- X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0) -->
-
-<!-- # Feature Scaling -->
-<!-- from sklearn.preprocessing import StandardScaler -->
-<!-- sc = StandardScaler() -->
-<!-- X_train = sc.fit_transform(X_train) -->
-<!-- X_test = sc.transform(X_test) -->
-
-<!-- # Fitting Logistic Regression to the Training set -->
-<!-- from sklearn.linear_model import LogisticRegression -->
-<!-- classifier = LogisticRegression(random_state = 0) -->
-<!-- classifier.fit(X_train, y_train) -->
-
-<!-- # Predicting the Test set results -->
-<!-- y_pred = classifier.predict(X_test) -->
-
-<!-- # Making the Confusion Matrix -->
-<!-- from sklearn.metrics import confusion_matrix -->
-<!-- cm = confusion_matrix(y_test, y_pred) -->
-
-<!-- # Visualising the Training set results -->
-<!-- from matplotlib.colors import ListedColormap -->
-<!-- X_set, y_set = X_train, y_train -->
-<!-- X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01), -->
-<!--                      np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01)) -->
-<!-- plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape), -->
-<!--              alpha = 0.75, cmap = ListedColormap(('red', 'green'))) -->
-<!-- plt.xlim(X1.min(), X1.max()) -->
-<!-- plt.ylim(X2.min(), X2.max()) -->
-<!-- for i, j in enumerate(np.unique(y_set)): -->
-<!--     plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1], -->
-<!--                 c = ListedColormap(('red', 'green'))(i), label = j) -->
-<!-- plt.title('Logistic Regression (Training set)') -->
-<!-- plt.xlabel('Age') -->
-<!-- plt.ylabel('Estimated Salary') -->
-<!-- plt.legend() -->
-<!-- plt.show() -->
-<!-- ``` -->
-
-
-
-# tree
-
-## R
-```{r}
-
-```
-
-## Python
-```{python}
-
-```
-
-
-
-# deep learning
-
-
-## R
-```{r}
-
-```
-
-## Python
-```{python}
-
-```
-
-
-
-
 
 
 
