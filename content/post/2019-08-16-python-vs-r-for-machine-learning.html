@@ -25,8 +25,8 @@ output: distill::distill_article
 
 
 
-<p>I often see comments about Python vs R for “insert any kind of task here”. They are often treated like arch enemies in an internal struggle for superiority where there can only be one winner.
-While they are of course very different languages, my take is that they are both extremely useful tools and have their own strengths and weaknesses and can be used interchangeably.
+<p>I often see comments about Python vs R for “insert any kind of task here”. They are often treated like arch-enemies in an internal struggle for superiority where there can only be one winner.
+While they are of course very different languages, my take is that they are both extremely useful tools with their own strengths and weaknesses, ad it is possible to use both interchangeably.
 Recently, I have been trying to expand my Python knowledge as I think it is important to have a range of tools available for any data science problem.
 While I have found R to be more than adequate for problems I have faced, I thought it would be good practice to implement some different models using both languages.</p>
 <p>In this post I will compare how R and Python can be used to address a simple classification problem using a couple of common techniques.
@@ -314,31 +314,24 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 
 # Get r data into Python
-
 X = r.train_data  
 y = r.test_data 
 
 # Prepare training and testing sets
-
 X_train = X.iloc[:, 1:23]
 y_train = X.iloc[:,0]
 X_test = y.iloc[:, 1:23]
 y_test = y.iloc[:,0]
 
 # Fit the model
-
 logreg = LogisticRegression(solver=&#39;lbfgs&#39;, random_state = 124)
 fit = logreg.fit(X_train, y_train)
 
 # Predict
-
 y_pred_log = logreg.predict(X_test)
 
-
 from sklearn.metrics import classification_report
-
-print(classification_report(y_test, y_pred_log))
-</code></pre>
+print(classification_report(y_test, y_pred_log))</code></pre>
 <pre><code>##               precision    recall  f1-score   support
 ## 
 ##          bad       0.64      0.49      0.55       307
@@ -389,15 +382,13 @@ eval(model_rf)</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Interesting, this model performs marginally worse than our logistic regression, but still rounds to 78% accuracy. There are many other techniques we could use to improve the model (e.g., cross validation) but for simplicity sakes we’ll leave it as that for now.</p>
+<p>This model performs almost equally as well as the logistic regression. There are many other techniques we could use to improve the model (e.g., boosted trees, cross validation) but for simplicity sakes we’ll leave it as that for now.</p>
 <p>In Python, we only need three lines of code:</p>
-<pre class="python"><code>
-from sklearn.ensemble import RandomForestClassifier
+<pre class="python"><code>from sklearn.ensemble import RandomForestClassifier
 
 rf = RandomForestClassifier(n_estimators = 1000, random_state = 125)
 f_fit = rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
-
 print(classification_report(y_test, y_pred_rf))</code></pre>
 <pre><code>##               precision    recall  f1-score   support
 ## 
