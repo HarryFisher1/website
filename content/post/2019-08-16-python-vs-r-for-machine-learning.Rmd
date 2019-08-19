@@ -3,7 +3,6 @@ title: 'Python vs R for classification '
 author: Harry Fisher
 date: '2019-08-19'
 slug: Python-vs-r-for-machine-learning
-draft: true 
 categories:
   - Python
   - R
@@ -132,7 +131,7 @@ eval <- function(model){
   summary() %>%
   select(-.estimator) %>%
   filter(.metric %in%
-    c("accuracy", "precision", "recall", "f_meas"))
+    c("accuracy", "precision", "recall", "f_meas")) %>% 
   kable()
 }
 
