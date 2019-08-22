@@ -1,14 +1,13 @@
 ---
-title: Visualising athletics rankings from the power of 10 site.
+title: Web scraping in R
 author: Harry Fisher
-date: '2019-08-16'
+date: '2019-08-22'
 slug: power-of-10-data
-draft: true
 categories:
   - DataViz
 tags: ["R", "DataViz"]
 subtitle: ''
-summary: 'Exploring web scraping within R to collect athletics rankings from www.thepowerof10.info and play with some different visualisation techniques'
+summary: 'Exploring ways to scrape athletics rankings for the web :fishing_pole_and_fish:'
 authors: []
 lastmod: '2019-08-16T12:55:18+01:00'
 featured: no
@@ -21,37 +20,650 @@ projects: []
 
 
 
-<p>As a keen athlete I spent many hours on athletics rankings webiste www.thepowerof10.info, comparing my performances to others (never a good idea), and stalking other athletes to see how they got on in competitions. For athletics nerds the site is fantastic, and provides all the information you need to keep up to date with the latest results.
-However, I wondered if it might be possible to explore some new ways to explore the data in a more visual format…</p>
+<p>As a keen athlete I spent many hours on athletics rankings website www.thepowerof10.info, comparing my performances to others (never a good idea), and stalking other athletes to see how they got on in competitions.
+For athletics nerds, the site is fantastic and provides all the information you need to keep up to date with the latest results.
+However, I wondered if it might be possible to explore some alternative ways of presenting the result…</p>
 <div id="getting-the-data" class="section level1">
 <h1>Getting the data</h1>
-<p>Initially, I had to figure out a way to gather the data from the power of 10 website. As you can see in the screenshot below, the rankings are already in a table format, so thankfully it wasn’t too difficult to figure something out.</p>
-<p>This was my first time using the rvest and RSelenium packages, so I’m sure this code can be imrpvode somewhat… It does however, see to do the trick.</p>
-<p>First I generated</p>
-<pre><code>```r
-readtable &lt;- function(url){ 
-  main &lt;- read_html(url) 
-  rankings &lt;- main %&gt;% 
-html_nodes(xpath = &#39;//*[@id=&quot;cphBody_lblCachedRankingList&quot;]/table&#39;) %&gt;% 
-html_table() %&gt;% 
-data.frame() %&gt;% 
-select(1:13) %&gt;% 
-set_names(c(&quot;Rank&quot;,&quot;Perf&quot;, &quot;windy&quot;, &quot;windspeed&quot;, &quot;PB&quot;, &quot;newpb&quot;, &quot;Name&quot;, &quot;agegroup&quot;, &quot;month_year&quot;,&quot;Coach&quot;,&quot;Club&quot;,&quot;Venue&quot;, &quot;Date&quot;)) %&gt;% 
-mutate(year = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]]),
-       event = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]])) %&gt;% 
-mutate_at(vars(Name), funs((replace(., .==&quot;&quot;, NA)))) %&gt;% 
-mutate(Name = na.locf(Name))
-}
-```</code></pre>
-<p>A second function I used was to get each individual athlete’s unique identifier number. With this number I could get each athletes individual rankings when required.</p>
-<pre class="r"><code>athleteurl &lt;- function(url){
+<p>Initially, I had to figure out a way to first gather the data from the power of 10 website.
+As you can see in the screenshot below, the rankings are already in a table format, so thankfully it wasn’t too difficult to figure something out.</p>
+<p><img src="/post/2019-08-16-power-of-10-data_files/powerof10homepage.PNG" /></p>
+<p>This was my first time using the <a href="http://rvest.tidyverse.org/"><code>rvest</code></a> package, so I’m sure this code can be improved somewhat… It does, however, seem to do the trick!</p>
+<p>To start, I got a url from one of the ranking pages.</p>
+<pre class="r"><code>url &lt;- &#39;https://www.thepowerof10.info/rankings/rankinglist.aspx?event=100&amp;agegroup=ALL&amp;sex=M&amp;year=2012&#39;</code></pre>
+<p>Thankfully, to access other pages it was just a case of supplying new values to the arguments in the url.
+For example to get the 200m rankings I could just swap the “event=100” for “event=200” in the string.</p>
+<p>To do this, I wrote a simple function that would generate a vector of strings with the desired events, years and for male or female athletes.</p>
+<pre class="r"><code>library(tidyverse) 
+library(zoo) 
+library(knitr)
+library(lubridate)
+
+urlmaker &lt;- function(years, events, gender){
+  url &lt;- &#39;https://www.thepowerof10.info/rankings/rankinglist.aspx?event=100&amp;agegroup=ALL&amp;sex=M&amp;year=2012&#39;
+  baseevent &lt;- as.character(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]])
+  baseyear &lt;- as.character(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]])
+  newyear &lt;- rep(years, times = length(events))
+  list_of_years &lt;- str_replace(url, baseyear, newyear)
+  newevent &lt;- rep(events, each = length(years))
+  yearandevent &lt;- str_replace(list_of_years, baseevent, newevent)
+  
+  sex &lt;- str_c(&quot;sex=&quot;, gender, sep = &quot;&quot;)
+  yearandevent &lt;- str_replace(yearandevent, &quot;sex=M&quot;, sex)
+  return(yearandevent)
+}</code></pre>
+<p>I then created a string of events and years I wanted to scrape.
+In this instance I only wanted male athletes, so also set gender to “M”.
+The result was a vector of urls as character strings that I could use to access the necessary pages.</p>
+<pre class="r"><code>events &lt;- c(&quot;100&quot;, &quot;200&quot;, &quot;400&quot;, &quot;800&quot;, &quot;1500&quot;, &quot;3000&quot;, &quot;5000&quot;, &quot;10000&quot;)
+years &lt;- as.character(seq(from = 2006, to = 2018, by = 1))
+gender &lt;- &quot;M&quot;
+
+# create list of urls to use for scraping
+urls &lt;- urlmaker(years, events, gender)
+
+print(head(urls, 3))</code></pre>
+<pre><code>## [1] &quot;https://www.thepowerof10.info/rankings/rankinglist.aspx?event=100&amp;agegroup=ALL&amp;sex=M&amp;year=2006&quot;
+## [2] &quot;https://www.thepowerof10.info/rankings/rankinglist.aspx?event=100&amp;agegroup=ALL&amp;sex=M&amp;year=2007&quot;
+## [3] &quot;https://www.thepowerof10.info/rankings/rankinglist.aspx?event=100&amp;agegroup=ALL&amp;sex=M&amp;year=2008&quot;</code></pre>
+<p>Next, I had to figure out a way to actually get the data.
+This step involved a fair bit of googling initially, but after a while I realised it was mainly a case of identifying the html labels on the web page.
+The screenshot below shows how I identified the table id on the rankings page (click to zoom in).</p>
+<p><a href="/post/2019-08-16-power-of-10-data_files/po10_window.png"><img src="/post/2019-08-16-power-of-10-data_files/po10_window.png" /></a></p>
+<p>Once I knew how the different elements on the page were identified, it was as easy as copying and pasting the table id into <code>html_nodes()</code> and converting to a table with <code>html_table()</code>.
+After that it was just the usual wrangling you’d expect with a messy data frame.</p>
+<pre class="r"><code>library(rvest)
+    
+readtable &lt;- function(url) {
   main &lt;- read_html(url)
-  athleteinfo &lt;- tibble(Name = html_text(html_nodes(main, &quot;td:nth-child(7) a&quot;), &quot;href&quot;),
-                        athleteurl = html_attr(html_nodes(main, &quot;td:nth-child(7) a&quot;), &quot;href&quot;),
-                        year = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]]),
-                        event = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]]))
-  athleteinfo &lt;- athleteinfo %&gt;% 
+  rankings &lt;- main %&gt;%
+    html_nodes(xpath = &#39;//*[@id=&quot;cphBody_lblCachedRankingList&quot;]/table&#39;) %&gt;%
+    html_table() %&gt;%
+    data.frame() %&gt;%
+    select(1:13) %&gt;%
+    set_names(c(&quot;Rank&quot;, &quot;Perf&quot;, &quot;windy&quot;, &quot;windspeed&quot;, &quot;PB&quot;, &quot;newpb&quot;, &quot;Name&quot;, &quot;agegroup&quot;, &quot;month_year&quot;, &quot;Coach&quot;, &quot;Club&quot;, &quot;Venue&quot;, &quot;Date&quot;)) %&gt;%
+    mutate(
+      year = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]]),
+      event = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]])
+    ) %&gt;%
+    mutate_at(vars(Name), list(~replace(., . == &quot;&quot;, NA))) %&gt;%
+    mutate(Name = na.locf(Name))
+}</code></pre>
+<p>Now I simply had to pass the url to the function, and we’ll have the table from the webpage stored as a dataframe.</p>
+<pre class="r"><code>ranks &lt;- readtable(url)
+
+ranks %&gt;% 
+  slice(4:6) %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Rank</th>
+<th align="left">Perf</th>
+<th align="left">windy</th>
+<th align="left">windspeed</th>
+<th align="left">PB</th>
+<th align="left">newpb</th>
+<th align="left">Name</th>
+<th align="left">agegroup</th>
+<th align="left">month_year</th>
+<th align="left">Coach</th>
+<th align="left">Club</th>
+<th align="left">Venue</th>
+<th align="left">Date</th>
+<th align="right">year</th>
+<th align="right">event</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">10.02</td>
+<td align="left"></td>
+<td align="left">2.0</td>
+<td align="left">9.97</td>
+<td align="left"></td>
+<td align="left">Dwain Chambers</td>
+<td align="left"></td>
+<td align="left">12</td>
+<td align="left"></td>
+<td align="left">Belgrave</td>
+<td align="left">Olympic Park</td>
+<td align="left">4 Aug 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">10.05</td>
+<td align="left"></td>
+<td align="left">0.1</td>
+<td align="left">9.97</td>
+<td align="left"></td>
+<td align="left">Adam Gemili</td>
+<td align="left">U20</td>
+<td align="left">-4</td>
+<td align="left">Michael Afilaka</td>
+<td align="left">Blackheath &amp; Bromley</td>
+<td align="left">Barcelona, ESP</td>
+<td align="left">11 Jul 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">10.13</td>
+<td align="left"></td>
+<td align="left">0.4</td>
+<td align="left">9.91</td>
+<td align="left"></td>
+<td align="left">James Dasaolu</td>
+<td align="left"></td>
+<td align="left">3</td>
+<td align="left">Steve Fudge</td>
+<td align="left">Croydon</td>
+<td align="left">Olympic Park</td>
+<td align="left">4 Aug 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+</tr>
+</tbody>
+</table>
+<p>If I wanted to scrape multiple urls at once I would use <code>map_df</code>. Here I can pass my vector of urls and map_df will perform the scarping function <code>readtable</code> on each element in the vector and append the result together (this can take a while to complete so I"ll just use the first 3 urls from our vector of 104 urls).</p>
+<pre class="r"><code>urls_short &lt;- urls[1:3]
+
+male_rankings &lt;- urls_short %&gt;% 
+  map_df(readtable)</code></pre>
+<p>Now we can view the top ranked athlete for each year.</p>
+<pre class="r"><code>male_rankings %&gt;% 
+  filter(Rank == &quot;1&quot;) %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Rank</th>
+<th align="left">Perf</th>
+<th align="left">windy</th>
+<th align="left">windspeed</th>
+<th align="left">PB</th>
+<th align="left">newpb</th>
+<th align="left">Name</th>
+<th align="left">agegroup</th>
+<th align="left">month_year</th>
+<th align="left">Coach</th>
+<th align="left">Club</th>
+<th align="left">Venue</th>
+<th align="left">Date</th>
+<th align="right">year</th>
+<th align="right">event</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">10.07</td>
+<td align="left"></td>
+<td align="left">1.5</td>
+<td align="left">9.97</td>
+<td align="left"></td>
+<td align="left">Dwain Chambers</td>
+<td align="left"></td>
+<td align="left">6</td>
+<td align="left"></td>
+<td align="left">Belgrave</td>
+<td align="left">Gateshead</td>
+<td align="left">11 Jun 06</td>
+<td align="right">2006</td>
+<td align="right">100</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="left">10.06</td>
+<td align="left"></td>
+<td align="left">1.3</td>
+<td align="left">10.06</td>
+<td align="left">PB</td>
+<td align="left">Marlon Devonish</td>
+<td align="left"></td>
+<td align="left">9</td>
+<td align="left">Tony Lester</td>
+<td align="left">Coventry</td>
+<td align="left">Lausanne, SUI</td>
+<td align="left">10 Jul 07</td>
+<td align="right">2007</td>
+<td align="right">100</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">10.00</td>
+<td align="left"></td>
+<td align="left">1.6</td>
+<td align="left">9.97</td>
+<td align="left"></td>
+<td align="left">Dwain Chambers</td>
+<td align="left"></td>
+<td align="left">8</td>
+<td align="left"></td>
+<td align="left">Belgrave</td>
+<td align="left">Birmingham</td>
+<td align="left">12 Jul 08</td>
+<td align="right">2008</td>
+<td align="right">100</td>
+</tr>
+</tbody>
+</table>
+<div id="individual-athletes" class="section level2">
+<h2>Individual athletes</h2>
+<p>The PO10 also provides detailed performance history for individual athletes.
+I wanted to be able to have access to this data as well, however I wanted to avoid downloading every individual athletes data to disk as I imagine that may have taken a while…</p>
+<p>Instead the solution I came up with was a function get each individual athlete’s unique identifier number.
+With this number I could get each athletes individual rankings when required using an “on the fly” scrape, as a single athletes page is not very much data at all.</p>
+<p>The screenshot below shows how the code that I needed to extract</p>
+<p><a href="/post/2019-08-16-power-of-10-data_files/po10id.png"><img src="/post/2019-08-16-power-of-10-data_files/po10id.png" /></a></p>
+<pre class="r"><code>athleteurl &lt;- function(url) {
+  main &lt;- read_html(url)
+  athleteinfo &lt;- tibble(
+    Name = html_text(html_nodes(main, &quot;td:nth-child(7) a&quot;), &quot;href&quot;),
+    athleteurl = html_attr(html_nodes(main, &quot;td:nth-child(7) a&quot;), &quot;href&quot;),
+    year = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[3]]),
+    event = as.numeric(str_extract_all(url, &quot;[0-9]+&quot;)[[1]][[2]])
+  )
+  athleteinfo &lt;- athleteinfo %&gt;%
     filter(Name != &quot;&quot;)
 }</code></pre>
-<p>To use these functions I simply passed a url to each function</p>
+<pre class="r"><code>ids &lt;- athleteurl(url)
+
+head(ids)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   Name                   athleteurl                              year event
+##   &lt;chr&gt;                  &lt;chr&gt;                                  &lt;dbl&gt; &lt;dbl&gt;
+## 1 Dwain Chambers         /athletes/profile.aspx?athleteid=31816  2012   100
+## 2 Adam Gemili            /athletes/profile.aspx?athleteid=2087~  2012   100
+## 3 James Dasaolu          /athletes/profile.aspx?athleteid=22721  2012   100
+## 4 Harry Aikines-Aryeetey /athletes/profile.aspx?athleteid=19988  2012   100
+## 5 Mark Lewis-Francis     /athletes/profile.aspx?athleteid=21139  2012   100
+## 6 James Alaka            /athletes/profile.aspx?athleteid=22255  2012   100</code></pre>
+<p>In another function I join these two tables together so I had one data frame that had all the results and rankings as well as each athletes individual id that I could use to get their individual data.
+I also appended the full address to each individual athletes id.</p>
+<pre class="r"><code>finaljoin &lt;- function(ranks, ids, gender) {
+  yeartimes &lt;- ranks %&gt;%
+    group_by(year, event) %&gt;%
+    filter(str_detect(Rank, &quot;[:alpha:]&quot;)) %&gt;%
+    select(year, Rank) %&gt;%
+    filter(str_detect(Rank, &quot;^UK&quot;)) %&gt;%
+    separate(Rank, c(&quot;topn&quot;, &quot;timing&quot;), &quot;: &quot;) %&gt;%
+    spread(key = topn, value = timing) %&gt;%
+    ungroup()
+  cleanrankings &lt;- ranks %&gt;%
+    filter(!str_detect(Rank, &quot;[:alpha:]&quot;)) %&gt;%
+    inner_join(., ids, by = c(&quot;Name&quot;, &quot;year&quot;, &quot;event&quot;)) %&gt;%
+    mutate(athleteurl = paste(&quot;https://www.thepowerof10.info&quot;, athleteurl, sep = &quot;&quot;))
+
+  cleanrankings &lt;- left_join(cleanrankings, yeartimes, by = c(&quot;event&quot;, &quot;year&quot;)) %&gt;%
+    janitor::clean_names() %&gt;%
+    mutate(gender = gender)
+}</code></pre>
+<p>This left me with a complete dataframe I could work with.</p>
+<pre class="r"><code>clean_ranks &lt;- finaljoin(ranks = ranks, ids = ids, gender = &quot;M&quot;)</code></pre>
+<pre><code>## Adding missing grouping variables: `event`</code></pre>
+<pre class="r"><code>clean_ranks %&gt;% 
+  head() %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">rank</th>
+<th align="left">perf</th>
+<th align="left">windy</th>
+<th align="left">windspeed</th>
+<th align="left">pb</th>
+<th align="left">newpb</th>
+<th align="left">name</th>
+<th align="left">agegroup</th>
+<th align="left">month_year</th>
+<th align="left">coach</th>
+<th align="left">club</th>
+<th align="left">venue</th>
+<th align="left">date</th>
+<th align="right">year</th>
+<th align="right">event</th>
+<th align="left">athleteurl</th>
+<th align="left">uk_10_target</th>
+<th align="left">uk_100_target</th>
+<th align="left">uka_olympic_a_standard</th>
+<th align="left">uka_olympic_b_standard</th>
+<th align="left">gender</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">10.02</td>
+<td align="left"></td>
+<td align="left">2.0</td>
+<td align="left">9.97</td>
+<td align="left"></td>
+<td align="left">Dwain Chambers</td>
+<td align="left"></td>
+<td align="left">12</td>
+<td align="left"></td>
+<td align="left">Belgrave</td>
+<td align="left">Olympic Park</td>
+<td align="left">4 Aug 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+<td align="left"><a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=31816" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=31816</a></td>
+<td align="left">10.20</td>
+<td align="left">10.75</td>
+<td align="left">10.18</td>
+<td align="left">10.24</td>
+<td align="left">M</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">10.05</td>
+<td align="left"></td>
+<td align="left">0.1</td>
+<td align="left">9.97</td>
+<td align="left"></td>
+<td align="left">Adam Gemili</td>
+<td align="left">U20</td>
+<td align="left">-4</td>
+<td align="left">Michael Afilaka</td>
+<td align="left">Blackheath &amp; Bromley</td>
+<td align="left">Barcelona, ESP</td>
+<td align="left">11 Jul 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+<td align="left"><a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=208735" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=208735</a></td>
+<td align="left">10.20</td>
+<td align="left">10.75</td>
+<td align="left">10.18</td>
+<td align="left">10.24</td>
+<td align="left">M</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">10.13</td>
+<td align="left"></td>
+<td align="left">0.4</td>
+<td align="left">9.91</td>
+<td align="left"></td>
+<td align="left">James Dasaolu</td>
+<td align="left"></td>
+<td align="left">3</td>
+<td align="left">Steve Fudge</td>
+<td align="left">Croydon</td>
+<td align="left">Olympic Park</td>
+<td align="left">4 Aug 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+<td align="left"><a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=22721" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=22721</a></td>
+<td align="left">10.20</td>
+<td align="left">10.75</td>
+<td align="left">10.18</td>
+<td align="left">10.24</td>
+<td align="left">M</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">10.20</td>
+<td align="left"></td>
+<td align="left">1.0</td>
+<td align="left">10.08</td>
+<td align="left"></td>
+<td align="left">Harry Aikines-Aryeetey</td>
+<td align="left"></td>
+<td align="left">2</td>
+<td align="left">Michael Khmel</td>
+<td align="left">Sutton &amp; District</td>
+<td align="left">Rovereto, ITA</td>
+<td align="left">4 Sep 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+<td align="left"><a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=19988" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=19988</a></td>
+<td align="left">10.20</td>
+<td align="left">10.75</td>
+<td align="left">10.18</td>
+<td align="left">10.24</td>
+<td align="left">M</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">10.21</td>
+<td align="left"></td>
+<td align="left">nwi</td>
+<td align="left">10.04</td>
+<td align="left"></td>
+<td align="left">Mark Lewis-Francis</td>
+<td align="left"></td>
+<td align="left">8</td>
+<td align="left">Linford Christie</td>
+<td align="left">Birchfield H</td>
+<td align="left">Mesa AZ, USA</td>
+<td align="left">28 Apr 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+<td align="left"><a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=21139" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=21139</a></td>
+<td align="left">10.20</td>
+<td align="left">10.75</td>
+<td align="left">10.18</td>
+<td align="left">10.24</td>
+<td align="left">M</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="left">10.22</td>
+<td align="left"></td>
+<td align="left">2.0</td>
+<td align="left">10.22</td>
+<td align="left">PB</td>
+<td align="left">James Alaka</td>
+<td align="left"></td>
+<td align="left">1</td>
+<td align="left">Clarence Callender</td>
+<td align="left">Blackheath &amp; Bromley</td>
+<td align="left">Eugene OR, USA</td>
+<td align="left">13 May 12</td>
+<td align="right">2012</td>
+<td align="right">100</td>
+<td align="left"><a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=22255" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=22255</a></td>
+<td align="left">10.20</td>
+<td align="left">10.75</td>
+<td align="left">10.18</td>
+<td align="left">10.24</td>
+<td align="left">M</td>
+</tr>
+</tbody>
+</table>
+<p>The final function I used was to scrape and clean each individuals rankings “on the fly”.
+The only input is an athletes individual url, such as: “<a href="https://www.thepowerof10.info/athletes/profile.aspx?athleteid=31816" class="uri">https://www.thepowerof10.info/athletes/profile.aspx?athleteid=31816</a>”.</p>
+<pre class="r"><code>individual &lt;- function(athlete) {
+  history &lt;- athlete %&gt;%
+    read_html() %&gt;%
+    html_nodes(xpath = &#39;//*[@id = &quot;cphBody_pnlPerformances&quot;]/table&#39;) %&gt;%
+    html_table(fill = TRUE) %&gt;%
+    .[[2]] %&gt;%
+    select(-c(X4, X5, X8, X9)) %&gt;%
+    set_names(c(&quot;event&quot;, &quot;perf&quot;, &quot;indoor&quot;, &quot;position&quot;, &quot;heat&quot;, &quot;venue&quot;, &quot;meeting&quot;, &quot;date&quot;)) %&gt;%
+    filter(!str_detect(event, &quot;[:alpha:]&quot;)) %&gt;%
+    mutate(
+      date = dmy(date),
+      year = substr(date, 1, 4),
+      perf_time = case_when(
+        str_detect(perf, &quot;:&quot;) == FALSE ~ str_c(&quot;00:00:&quot;, perf),
+        str_length(str_split_fixed(perf, &quot;.&quot;, 4)[4]) == 3 ~ str_c(perf, &quot;0&quot;),
+        str_length(perf) == 6 | str_length(perf) == 7 ~ str_c(&quot;00:0&quot;, perf),
+        str_length(perf) == 8 | str_length(perf) == 9 ~ str_c(&quot;00:&quot;, perf),
+        TRUE ~ perf
+      )
+    )
+  name &lt;- read_html(athlete)
+  name &lt;- html_text(html_nodes(name, css = &quot;h2&quot;), trim = TRUE)
+  history &lt;- history %&gt;%
+    mutate(name = name)
+  return(history)
+}</code></pre>
+<p>The result is another dataframe that contains an individual athletes history of performances.</p>
+<pre class="r"><code>athlete &lt;- &quot;https://www.thepowerof10.info/athletes/profile.aspx?athleteid=31816&quot;
+
+individual(athlete) %&gt;% 
+  head(10) %&gt;% 
+  kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">event</th>
+<th align="left">perf</th>
+<th align="left">indoor</th>
+<th align="left">position</th>
+<th align="left">heat</th>
+<th align="left">venue</th>
+<th align="left">meeting</th>
+<th align="left">date</th>
+<th align="left">year</th>
+<th align="left">perf_time</th>
+<th align="left">name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">60</td>
+<td align="left">6.69</td>
+<td align="left">i</td>
+<td align="left">3</td>
+<td align="left">2.1</td>
+<td align="left">Lee Valley</td>
+<td align="left">Metaswitch Games Open</td>
+<td align="left">2019-02-16</td>
+<td align="left">2019</td>
+<td align="left">00:00:6.69</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="even">
+<td align="left">60</td>
+<td align="left">6.71</td>
+<td align="left">i</td>
+<td align="left">3</td>
+<td align="left">3.1</td>
+<td align="left">Lee Valley</td>
+<td align="left">Metaswitch Games Open</td>
+<td align="left">2019-02-16</td>
+<td align="left">2019</td>
+<td align="left">00:00:6.71</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="odd">
+<td align="left">60</td>
+<td align="left">6.78</td>
+<td align="left">i</td>
+<td align="left">2</td>
+<td align="left">h4</td>
+<td align="left">Birmingham</td>
+<td align="left">British Championships</td>
+<td align="left">2019-02-09</td>
+<td align="left">2019</td>
+<td align="left">00:00:6.78</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="even">
+<td align="left">60</td>
+<td align="left">6.78</td>
+<td align="left">i</td>
+<td align="left">1</td>
+<td align="left">1.2</td>
+<td align="left">Lee Valley</td>
+<td align="left">Metaswitch Games Open</td>
+<td align="left">2019-02-16</td>
+<td align="left">2019</td>
+<td align="left">00:00:6.78</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="odd">
+<td align="left">60</td>
+<td align="left">DQ</td>
+<td align="left">i</td>
+<td align="left">-</td>
+<td align="left">s1</td>
+<td align="left">Birmingham</td>
+<td align="left">British Championships</td>
+<td align="left">2019-02-09</td>
+<td align="left">2019</td>
+<td align="left">00:00:DQ</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="even">
+<td align="left">100</td>
+<td align="left">10.45</td>
+<td align="left"></td>
+<td align="left">2</td>
+<td align="left">2.2</td>
+<td align="left">Lee Valley</td>
+<td align="left">Lee Valley Sprint Double 100m Open Series</td>
+<td align="left">2019-07-17</td>
+<td align="left">2019</td>
+<td align="left">00:00:10.45</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="odd">
+<td align="left">100</td>
+<td align="left">10.62</td>
+<td align="left">w</td>
+<td align="left">1</td>
+<td align="left">1.3</td>
+<td align="left">Lee Valley</td>
+<td align="left">Lee Valley Sprint Double 100m Open Series</td>
+<td align="left">2019-07-17</td>
+<td align="left">2019</td>
+<td align="left">00:00:10.62</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="even">
+<td align="left">60</td>
+<td align="left">6.70</td>
+<td align="left">i</td>
+<td align="left">1</td>
+<td align="left">2.1</td>
+<td align="left">Lee Valley</td>
+<td align="left">Lee Valley December Open</td>
+<td align="left">2018-12-02</td>
+<td align="left">2018</td>
+<td align="left">00:00:6.70</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="odd">
+<td align="left">60</td>
+<td align="left">6.73</td>
+<td align="left">i</td>
+<td align="left">1</td>
+<td align="left">1.1</td>
+<td align="left">Lee Valley</td>
+<td align="left">Lee Valley December Open</td>
+<td align="left">2018-12-02</td>
+<td align="left">2018</td>
+<td align="left">00:00:6.73</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+<tr class="even">
+<td align="left">60</td>
+<td align="left">6.62</td>
+<td align="left">i</td>
+<td align="left">3</td>
+<td align="left"></td>
+<td align="left">Sheffield</td>
+<td align="left">British Athletics Indoor Team Trials</td>
+<td align="left">2017-02-11</td>
+<td align="left">2017</td>
+<td align="left">00:00:6.62</td>
+<td align="left">Dwain Chambers</td>
+</tr>
+</tbody>
+</table>
+<p>So that’s it!
+I am currently in the process of creating an interactive dashboard to visualise these results.
+You can see the (alpha?!) version here: <a href="https://harryfish.shinyapps.io/resultsdashboard/" class="uri">https://harryfish.shinyapps.io/resultsdashboard/</a>.
+Lots of work left to do, but any comments or feedback are always welcome.
+All the code is on my <a href="https://github.com/HarryFisher1/power_of_10">github</a> if you want to try anything out.</p>
+<p>Thanks for reading!</p>
+</div>
 </div>
