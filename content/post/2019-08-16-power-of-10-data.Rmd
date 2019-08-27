@@ -18,9 +18,10 @@ image:
 projects: []
 ---
 
-As a keen athlete I spent many hours on athletics rankings website www.thepowerof10.info, comparing my performances to others (never a good idea), and stalking other athletes to see how they got on in competitions. 
+As a keen athlete I spent many hours on athletics rankings website 
+https://www.thepowerof10.info, comparing my performances to others (never a good idea), and stalking other athletes to see how they got on in competitions. 
 For athletics nerds, the site is fantastic and provides all the information you need to keep up to date with the latest results.
-However, I wondered if it might be possible to explore some alternative ways of presenting the result...
+However, I wondered if it might be possible to explore some alternative ways of presenting the results...
 
 # Getting the data
 
