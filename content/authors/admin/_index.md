@@ -9,11 +9,11 @@ authors = ["admin"]
 superuser = true
 
 # Role/position
-role = "PhD Student"
+role = "Statistical modeler"
 
 # Organizations/Affiliations
 #   Separate multiple entries with a comma, using the form: `[ {name="Org1", url=""}, {name="Org2", url=""} ]`.
-organizations = [ { name = "Cardiff Metropolitan University", url = "" } ]
+# organizations = [ { name = "Cardiff Metropolitan University", url = "" } ]
 
 # Short bio (displayed in user profile at end of posts)
 #bio = "My research interests include distributed robotics, mobile computing and #programmable matter."
@@ -93,4 +93,4 @@ interests = [
 
 +++
 
-Hello! Thanks for visiting. My name is Harry Fisher and I am in the final stages of my PhD at Cardiff Metropolitan University. My research has sought novel ways to predict injury occurrence in athletes using a combination of machine learning techniques and traditional statistical modelling. I have a deep interest in all things data science, especially using R and Python to explore, model and visualise data. Below are some of projects I am working on at the moment, and some posts regarding things I have found interesting/worth sharing. Feel free to get in touch!
+A collection of musings and ramblings about things and ideas that someone else might also find interesting...
